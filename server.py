@@ -13,19 +13,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
+    def _set_error(self, err):
+        self.send_response(err)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
     def do_GET(self):
         self._set_headers()
         params = parse.parse_qs(parse.urlsplit(self.path).query)
         try:
-          userId = params['userId'][0]
-          dealer = json.loads(params['dealer'][0])
-          player = json.loads(params['player'][0])
+          game = params['game'][0]
+          if game == 'blackjack':
+            userId = params['userId'][0]
+            dealer = json.loads(params['dealer'][0])
+            player = json.loads(params['player'][0])
+          else:
+            self._set_error(400)
 
         except:
           print('Exception!')
-          self.send_response(400)
-          self.send_header('Content-type', 'text/html')
-          self.end_headers()
+          self._set_error(400)
           return
 
         # Now draw the table
