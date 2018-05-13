@@ -6,6 +6,9 @@ import sys
 import math
 from urllib import parse
 import json
+import boto3
+from io import BytesIO
+import os
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def _set_headers(self):
@@ -35,10 +38,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
           self._set_error(400)
           return
 
-        # Now draw the table
+        # Now draw the table and store in S3
         table = drawTable(cardImages, cardSize, player, dealer)
-        table.save(userId + '.png', 'png')
-        self._set_headers()
+        s3 = boto3.resource('s3', aws_access_key_id=os.environ['accessKeyId'], aws_secret_access_key=os.environ['secretAccessKey'])
+        out_img = BytesIO()
+        table.save(out_img, 'png')
+        out_img.seek(0)
+        s3.Bucket('garrett-alexa-images').put_object(Key='blackjack/' + userId + '.png', Body=out_img)
+
+        # Let them know the location in the response
+        self.send_response(200)
+        response = BytesIO()
+        s3file = {'file': 'https://s3.amazonaws.com/garrett-alexa-images/blackjack/' + userId + '.png'}
+        b = bytearray()
+        b.extend(map(ord, json.dumps(s3file)))
+        response.write(b)
+        self.wfile.write(response.getvalue());
 
     def do_HEAD(self):
         self._set_headers()
