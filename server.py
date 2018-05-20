@@ -71,7 +71,7 @@ httpd = socketserver.TCPServer(("", 8000), Handler)
 
 # First load the card images since we'll need those a lot
 try:
-  cardImages = Image.open('cards.gif')
+  cardImages = Image.open('images/blackjack/cards.gif')
   width = math.floor(cardImages.size[0] / 13)
   height = math.floor(cardImages.size[1] / 5)
   cardSize = (width, height)
